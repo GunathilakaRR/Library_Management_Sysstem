@@ -1,9 +1,11 @@
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import passport from "passport";
 import session from "express-session";
 import config from "./configs";
+import MongoStore from "connect-mongo";
 import logger from "./utils/logger";
 import "dotenv/config";
 import {connect} from "./utils/database.connection";
@@ -26,6 +28,7 @@ app.use(
         secret: config.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
+        store: MongoStore.create({mongoUrl: config.DB_CONNECTION_STRING}),
         cookie: {
             secure: false,
             expires: new Date(Date.now() + 10000),

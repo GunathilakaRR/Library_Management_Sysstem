@@ -1,18 +1,43 @@
+
 import GoogleStrategy from "passport-google-oauth20";
+// import config from "../api/model/user.model";
 import config from ".";
 import logger from "../utils/logger";
+import User from "../api/model/user.model"
+
 
 
 const googleAuth = (passport) =>{
     GoogleStrategy.Strategy;
 
-    passport.use(new GoogleStrategy({
+    console.log(config);
+    
+    passport.use(
+      new GoogleStrategy({
         clientID: config.GOOGLE_CLIENT_ID,
         clientSecret : config.GOOGLE_CLIENT_SECRET,
         callbackURL : config.GOOGLE_REDIRECT_URL
-    }, (accessToken, refreshToken, profile, callback)=>{
-        console.log(profile);
-        return callback(null, profile);
+    }, async (accessToken, refreshToken, profile, callback)=>{
+        const userObj = {
+          googleId: profile.id,
+          displayName: profile.displayName,
+          gmail: profile.emails[0].value,
+          image: profile.photos[0].value,
+          firstName: profile.name.givenName,
+          lastName: profile.name.familyName
+        }
+        let user = awaitUser.findOne({googleId: profile.id});
+
+        if(user){
+          return callback(null, user);
+        }
+        User.create(userObj)
+        .then((user) =>{
+          return callback(null, user);
+        })
+        .catch((err) =>{
+          return callback(err.message)
+        })
     }));
 
     passport.serializeUser((user, callback) => {
@@ -20,7 +45,9 @@ const googleAuth = (passport) =>{
       });
       
       passport.deserializeUser((id, callback) => {
-        callback(null, id);
+        User.findById(id, (err, user)=>{
+          callback(err, user);
+        })
         
       });
 };
